@@ -95,7 +95,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); margin: 8px 0 2px;
 .tip b { font-weight: 600; }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; }
 button.b { font: 500 14px var(--font-body); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
-button.b:hover { border-color: var(--accent); }
+button.b:hover:not(:disabled) { border-color: var(--accent); }
+button.b:disabled { opacity: 0.45; cursor: not-allowed; }
 button.b.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .status { background: var(--surface-2); border-radius: 10px; padding: 10px 14px; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
@@ -349,7 +350,8 @@ const TXT = {
     closeSw: "Slut brytaren", openSw: "Öppna brytaren", pause: "Pausa", resume: "Fortsätt", reset: "Återställ", adv: "Stega 1 s",
     speed: "Simuleringshastighet", srcV: "Källspänning",
     status: "Status:", elapsed: "Simulerad tid:",
-    stOpen: "Brytare öppen", stClosed: "Brytare sluten", stPaused: "pausad", stRunning: "körs",
+    stOpen: "Brytare öppen", stClosed: "Brytare sluten", stPaused: "pausad", stRunning: "körs", stReady: "väntar på start",
+    chartIdle: "Slut brytaren för att starta experimentet och klockan",
     pauseNote: "Paus fryser hela beräkningen, även temperaturen. Att öppna brytaren gör strömmen noll, men glödtråden fortsätter att svalna så länge simuleringen körs. Återställ ger 300 K.",
     lgI: "Ström (A, vänster skala)", lgT: "Temperatur (K, höger skala)",
     note2: "Det tidsbaserade experimentet är en förenklad termisk modell som jag kalibrerat mot labbens stabila läge, 2 013 K och 65,9 mA vid 5 V. Tidsförloppet och ljusstyrkan är illustrativa och inte en exakt kopia av FreeCircuitSims interna modell.",
@@ -410,7 +412,8 @@ const TXT = {
     closeSw: "Close switch", openSw: "Open switch", pause: "Pause", resume: "Resume", reset: "Reset", adv: "Advance 1 s",
     speed: "Simulation speed", srcV: "Source voltage",
     status: "Status:", elapsed: "Simulated time:",
-    stOpen: "Switch open", stClosed: "Switch closed", stPaused: "paused", stRunning: "running",
+    stOpen: "Switch open", stClosed: "Switch closed", stPaused: "paused", stRunning: "running", stReady: "waiting to start",
+    chartIdle: "Close the switch to start the experiment and the clock",
     pauseNote: "Pausing freezes the whole calculation, temperature included. Opening the switch sets current to zero, but the filament keeps cooling while the simulation runs. Reset returns it to 300 K.",
     lgI: "Current (A, left scale)", lgT: "Temperature (K, right scale)",
     note2: "This time-based experiment is a simplified thermal model I calibrated to the lab's steady state of 2,013 K and 65.9 mA at 5 V. Its timing and brightness are illustrative, not an exact copy of FreeCircuitSim's internal model.",
@@ -610,7 +613,7 @@ document.querySelectorAll("[data-preset]").forEach(b => b.addEventListener("clic
 
 /* ---------- experiment 2 ---------- */
 const c2 = makeCircuit(el("circ2"), true);
-const S = { T: TA, t: 0, closed: false, running: true, hist: [], lastStart: null, lastStartT: null, nextSample: 0 };
+const S = { T: TA, t: 0, closed: false, running: false, started: false, hist: [], lastStart: null, lastStartT: null, nextSample: 0 };
 const V2 = () => +el("v2").value;
 const curI = () => S.closed ? V2() / R(S.T) : 0;
 function simulate(dtTotal) {
@@ -628,8 +631,9 @@ function simulate(dtTotal) {
 function update2() {
   const I = curI(), r = R(S.T);
   el("sw").textContent = S.closed ? t("openSw") : t("closeSw");
-  el("run").textContent = S.running ? t("pause") : t("resume");
-  el("st").textContent = (S.closed ? t("stClosed") : t("stOpen")) + " · " + (S.running ? t("stRunning") : t("stPaused"));
+  el("run").textContent = S.running || !S.started ? t("pause") : t("resume");
+  el("run").disabled = !S.started;
+  el("st").textContent = (S.closed ? t("stClosed") : t("stOpen")) + " · " + (!S.started ? t("stReady") : S.running ? t("stRunning") : t("stPaused"));
   el("st-dot").classList.toggle("on", S.closed);
   el("el").textContent = fmt(S.t, 2) + " s";
   el("spd-out").textContent = fmt(+el("spd").value, 2) + "×";
@@ -664,6 +668,11 @@ function drawSim() {
   g.textAlign = "center";
   for (let s = Math.ceil(x0); s <= x0 + 5 + 1e-9; s++) g.fillText(fmt(s, 0), x(s), Tp + ph + 16);
   g.fillStyle = pink; g.fillText(lang === "sv" ? "Simulerad tid (s)" : "Simulated time (s)", L + pw / 2, h - 4);
+  if (!S.started) {
+    g.fillStyle = pink; g.font = "14px IBM Plex Sans, sans-serif";
+    g.fillText(t("chartIdle"), L + pw / 2, Tp + ph / 2);
+    return;
+  }
   const pts = S.hist.filter(p => p[0] >= x0);
   const line = (sel, col, yf) => {
     if (pts.length < 2) return;
@@ -675,13 +684,14 @@ function drawSim() {
 }
 el("sw").addEventListener("click", () => {
   S.closed = !S.closed;
+  if (!S.started) { S.started = true; S.running = true; }
   if (S.closed) { S.lastStart = V2() / R(S.T); S.lastStartT = S.T; }
   S.hist.push([S.t, curI(), S.T]);
   update2();
 });
 el("run").addEventListener("click", () => { S.running = !S.running; update2(); });
-el("reset").addEventListener("click", () => { Object.assign(S, { T: TA, t: 0, closed: false, hist: [], lastStart: null, lastStartT: null, nextSample: 0 }); update2(); });
-el("adv").addEventListener("click", () => { simulate(1); update2(); });
+el("reset").addEventListener("click", () => { Object.assign(S, { T: TA, t: 0, closed: false, running: false, started: false, hist: [], lastStart: null, lastStartT: null, nextSample: 0 }); update2(); });
+el("adv").addEventListener("click", () => { S.started = true; simulate(1); update2(); });
 ["spd", "v2"].forEach(id => el(id).addEventListener("input", update2));
 
 /* ---------- loop ---------- */
@@ -708,9 +718,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", update1);
 new MutationObserver(update1).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 window.addEventListener("resize", update1);
 
-/* open in a working state: switch closed, a moment into warm-up */
-S.closed = true; S.lastStart = V2() / R(S.T); S.lastStartT = S.T; S.hist.push([0, S.lastStart, S.T]);
-simulate(1.2);
+/* Experiment 2 opens idle: switch open, 300 K, clock at 0 until the viewer closes the switch */
 applyLang();
 requestAnimationFrame(frame);
 })();
