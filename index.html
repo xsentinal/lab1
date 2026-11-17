@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lab 1 Lampkrets och Ohms lag</title>
+<meta name="description" content="Interaktiv lampkrets där du ändrar glödtrådens temperatur och spänning, slår av och på strömmen och ser hur resistans, ström och glöd förändras.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="Lab 1 Lampkrets och Ohms lag">
+<meta property="og:description" content="Interaktiv lampkrets där du ändrar glödtrådens temperatur och spänning, slår av och på strömmen och ser hur resistans, ström och glöd förändras.">
+<meta property="og:image" content="https://xsentinal.github.io/lab1/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://xsentinal.github.io/lab1/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sv_SE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lab 1 Lampkrets och Ohms lag">
+<meta name="twitter:description" content="Interaktiv lampkrets där du ändrar glödtrådens temperatur och spänning, slår av och på strömmen och ser hur resistans, ström och glöd förändras.">
+<meta name="twitter:image" content="https://xsentinal.github.io/lab1/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: a lab-bench page with a narrow reading column, each experiment a white bench with a dark instrument panel beside its controls. */
+:root {
+  --bg: #eceff2;
+  --surface: #ffffff;
+  --surface-2: #f4f6f8;
+  --ink: #13202a;
+  --muted: #5b6a76;
+  --line: #d4dbe1;
+  --accent: #0a6c88;
+  --accent-ink: #ffffff;
+  --panel: #0c1820;
+  --panel-line: #1d2f3b;
+  --panel-ink: #c9dce4;
+  --panel-muted: #7f97a3;
+  --wire: #66c6df;
+  --heat: #f2a23a;
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #091016; --surface: #101b23; --surface-2: #15232d; --ink: #e2e9ee; --muted: #8e9ca7;
+    --line: #22323d; --accent: #5cc0da; --accent-ink: #061218; --panel: #050c11; --panel-line: #1a2a35;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #091016; --surface: #101b23; --surface-2: #15232d; --ink: #e2e9ee; --muted: #8e9ca7;
+  --line: #22323d; --accent: #5cc0da; --accent-ink: #061218; --panel: #050c11; --panel-line: #1a2a35;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; }
+.mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* header */
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 6px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(40px, 7vw, 64px); line-height: 1; font-weight: 700; }
+h1 .sub { display: block; font-size: 0.42em; font-weight: 500; color: var(--muted); margin-top: 8px; letter-spacing: 0; }
+.intro { max-width: 66ch; color: var(--muted); }
+.spec { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-data); font-size: 12.5px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); white-space: nowrap; }
+.lang { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.lang button { border: 0; background: transparent; color: var(--muted); font: 500 13px var(--font-data); padding: 6px 12px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* bench */
+section.bench { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+.bench h2 { font-size: 22px; font-weight: 600; }
+.bench h2 .tag { font-family: var(--font-data); font-size: 12px; font-weight: 500; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.lede { color: var(--muted); max-width: 70ch; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 20px; align-items: start; }
+@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.controls { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ctl label { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; gap: 12px; }
+.ctl label output { font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
+.ctl .hint { font-size: 12.5px; color: var(--muted); font-family: var(--font-data); }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 8px 0 2px; }
+.tip { background: var(--surface-2); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+.tip b { font-weight: 600; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button.b { font: 500 14px var(--font-body); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+button.b:hover { border-color: var(--accent); }
+button.b.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { background: var(--surface-2); border-radius: 10px; padding: 10px 14px; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
+.status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: var(--muted); }
+.status .dot.on { background: #2fbf71; }
+
+/* instrument panel */
+.panel { background: var(--panel); border-radius: 12px; padding: 10px; color: var(--panel-ink); min-width: 0; }
+.panel svg { display: block; width: 100%; height: auto; }
+.flowcap { font-size: 12.5px; color: var(--panel-muted); padding: 2px 6px 4px; }
+.pcol { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tip-h { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.flowtog { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 6px 6px; }
+.flowtog .ft { font: 500 12px var(--font-data); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--panel-line); background: transparent; color: var(--panel-muted); cursor: pointer; }
+.flowtog .ft[aria-pressed="true"] { background: var(--wire); border-color: var(--wire); color: var(--panel); }
+
+/* readouts */
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
+.tile .v { font-family: var(--font-data); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .s { font-size: 12px; color: var(--muted); font-family: var(--font-data); }
+.formula { font-family: var(--font-data); font-size: 13px; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; overflow-x: auto; white-space: nowrap; }
+.note { font-size: 13px; color: var(--muted); max-width: 80ch; }
+
+/* charts */
+.chartbox { position: relative; width: 100%; min-width: 0; }
+.chartbox canvas { display: block; width: 100%; }
+.chart-dark { background: var(--panel); border-radius: 12px; padding: 8px 6px 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.chart-head h3 { font-size: 15px; font-weight: 600; }
+
+/* results */
+.results { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 760px) { .results { grid-template-columns: minmax(0, 1fr); } }
+.results h3 { font-size: 16px; margin-bottom: 8px; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.03em; }
+td.n, th.n { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+td .calc { color: var(--muted); font-size: 12px; }
+.calcs { display: flex; flex-direction: column; gap: 10px; }
+.calc-row { border-left: 2px solid var(--heat); padding: 2px 0 2px 12px; }
+.calc-row .eq { font-family: var(--font-data); font-size: 14px; }
+.calc-row .why { font-size: 13px; color: var(--muted); }
+.answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; }
+@media (max-width: 760px) { .answers { grid-template-columns: minmax(0, 1fr); } }
+.ans { min-width: 0; }
+.ans h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.ans .qid { font-family: var(--font-data); font-size: 12px; font-weight: 500; color: var(--accent); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+.ans p + p { margin-top: 8px; }
+footer { font-size: 12.5px; color: var(--muted); text-align: left; max-width: 80ch; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <span class="eyebrow" data-i18n="eyebrow"></span>
+      <h1>Lab 1<span class="sub" data-i18n="subtitle"></span></h1>
+      <p class="intro" data-i18n="intro"></p>
+      <div class="spec">
+        <span class="chip">U = 5 V</span>
+        <span class="chip" data-i18n="chipLamp"></span>
+        <span class="chip">R<sub>300 K</sub> = 4,225 Ω</span>
+        <span class="chip">I<sub>stabil</sub> = 65,9 mA</span>
+      </div>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button id="lang-sv" type="button" aria-pressed="true">SV</button>
+      <button id="lang-en" type="button" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <!-- Experiment 1 -->
+  <section class="bench" aria-labelledby="h-exp1">
+    <div>
+      <h2 id="h-exp1"><span class="tag" data-i18n="tag1"></span><span data-i18n="h1"></span></h2>
+    </div>
+    <p class="lede" data-i18n="lede1"></p>
+    <div class="split">
+      <div class="controls">
+        <div class="ctl">
+          <label for="t1"><span data-i18n="filTemp"></span><output id="t1-out" class="mono"></output></label>
+          <input id="t1" type="range" min="300" max="2500" step="1" value="1093">
+          <span class="hint" id="t1-c"></span>
+        </div>
+        <div class="ctl">
+          <label for="v1"><span data-i18n="battV"></span><output id="v1-out" class="mono"></output></label>
+          <input id="v1" type="range" min="0" max="6.5" step="0.1" value="5">
+          <span class="hint" data-i18n="vHint"></span>
+        </div>
+        <div class="btns">
+          <button class="b" type="button" data-preset="300" data-i18n="pCold"></button>
+          <button class="b" type="button" data-preset="457" data-i18n="pWarm"></button>
+          <button class="b" type="button" data-preset="2013" data-i18n="pSteady"></button>
+        </div>
+        <div class="tip" data-i18n="tip1"></div>
+      </div>
+      <div class="pcol"><div class="panel" id="circ1"></div><p class="note flowmore" data-i18n="capE2"></p></div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="k" data-i18n="kR"></div><div class="v" id="r1"></div></div>
+      <div class="tile"><div class="k" data-i18n="kI"></div><div class="v" id="i1"></div></div>
+      <div class="tile"><div class="k" data-i18n="kP"></div><div class="v" id="p1"></div></div>
+      <div class="tile"><div class="k" data-i18n="kWl"></div><div class="v" id="w1"></div></div>
+      <div class="tile"><div class="k" data-i18n="kBr"></div><div class="v" id="b1"></div></div>
+      <div class="tile"><div class="k" data-i18n="kApp"></div><div class="v" id="a1"></div></div>
+    </div>
+    <div class="formula" id="f1"></div>
+
+    <div class="chart-head">
+      <h3 data-i18n="rtTitle"></h3>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i><span data-i18n="lgPts"></span></span>
+        <span><i style="background:var(--heat)"></i><span data-i18n="lgNow"></span></span>
+      </div>
+    </div>
+    <div class="chartbox"><canvas id="rt" height="240" aria-label="R(T)"></canvas></div>
+    <p class="note" data-i18n="note1"></p>
+  </section>
+
+  <!-- Experiment 2 -->
+  <section class="bench" aria-labelledby="h-exp2">
+    <h2 id="h-exp2"><span class="tag" data-i18n="tag2"></span><span data-i18n="h2"></span></h2>
+    <p class="lede" data-i18n="lede2"></p>
+    <div class="tip"><h3 class="tip-h" data-i18n="whyH"></h3><p data-i18n="whyR"></p></div>
+    <div class="split">
+      <div class="controls">
+        <div class="btns">
+          <button class="b primary" id="sw" type="button"></button>
+          <button class="b" id="run" type="button"></button>
+          <button class="b" id="reset" type="button" data-i18n="reset"></button>
+          <button class="b" id="adv" type="button" data-i18n="adv"></button>
+        </div>
+        <div class="ctl">
+          <label for="spd"><span data-i18n="speed"></span><output id="spd-out" class="mono"></output></label>
+          <input id="spd" type="range" min="0.05" max="2" step="0.05" value="0.5">
+        </div>
+        <div class="ctl">
+          <label for="v2"><span data-i18n="srcV"></span><output id="v2-out" class="mono"></output></label>
+          <input id="v2" type="range" min="0" max="6.5" step="0.1" value="5">
+        </div>
+        <div class="status">
+          <span><span class="dot" id="st-dot"></span><span data-i18n="status"></span> <b id="st"></b></span>
+          <span><span data-i18n="elapsed"></span> <b class="mono" id="el"></b></span>
+        </div>
+        <p class="note" data-i18n="pauseNote"></p>
+      </div>
+      <div class="pcol"><div class="panel" id="circ2"></div><p class="note flowmore" data-i18n="capE2"></p></div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="k" data-i18n="kT"></div><div class="v" id="t2"></div><div class="s" id="t2c"></div></div>
+      <div class="tile"><div class="k" data-i18n="kR"></div><div class="v" id="r2"></div></div>
+      <div class="tile"><div class="k" data-i18n="kI"></div><div class="v" id="i2"></div></div>
+      <div class="tile"><div class="k" data-i18n="kPe"></div><div class="v" id="p2"></div></div>
+      <div class="tile"><div class="k" data-i18n="kStart"></div><div class="v" id="s2"></div><div class="s" id="s2c"></div></div>
+      <div class="tile"><div class="k" data-i18n="kBr"></div><div class="v" id="b2"></div><div class="s" id="b2c"></div></div>
+    </div>
+    <div class="chart-dark"><div class="chartbox"><canvas id="sim" height="250" aria-label="I(t), T(t)"></canvas></div></div>
+    <div class="legend">
+      <span><i style="background:var(--wire)"></i><span data-i18n="lgI"></span></span>
+      <span><i style="background:var(--heat)"></i><span data-i18n="lgT"></span></span>
+    </div>
+    <p class="note" data-i18n="note2"></p>
+  </section>
+
+  <!-- Results -->
+  <section class="bench" aria-labelledby="h-res">
+    <h2 id="h-res"><span class="tag" data-i18n="tag3"></span><span data-i18n="h3"></span></h2>
+    <div class="results">
+      <div>
+        <h3 data-i18n="tblVG"></h3>
+        <div class="tbl"><table>
+          <thead><tr><th data-i18n="thT"></th><th class="n" data-i18n="thR"></th><th class="n" data-i18n="thI"></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">300 K</td><td class="n">4,225 Ω</td><td class="n">1 183 mA <div class="calc" data-i18n="calculated"></div></td></tr>
+            <tr><td class="mono">334 K</td><td class="n">10,618 Ω</td><td class="n">470,9 mA</td></tr>
+            <tr><td class="mono">476 K</td><td class="n">29,013 Ω</td><td class="n">172,3 mA</td></tr>
+            <tr><td class="mono">1 032 K</td><td class="n">57,677 Ω</td><td class="n">86,7 mA</td></tr>
+            <tr><td class="mono">2 013 K</td><td class="n">75,873 Ω</td><td class="n">65,9 mA</td></tr>
+          </tbody>
+        </table></div>
+        <h3 style="margin-top:18px" data-i18n="tblG"></h3>
+        <div class="tbl"><table>
+          <thead><tr><th data-i18n="thSw"></th><th data-i18n="thLamp"></th><th class="n" data-i18n="thI"></th></tr></thead>
+          <tbody>
+            <tr><td data-i18n="gOpen"></td><td data-i18n="gOff"></td><td class="n">0 mA</td></tr>
+            <tr><td data-i18n="gClosed"></td><td data-i18n="gOn"></td><td class="n">65,9 mA</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="calcs">
+        <h3 data-i18n="calcH"></h3>
+        <div class="calc-row"><div class="eq">I = 5 / 4,225 ≈ 1,183 A</div><div class="why" data-i18n="c1"></div></div>
+        <div class="calc-row"><div class="eq">R = 5 / 0,0659 ≈ 75,87 Ω</div><div class="why" data-i18n="c2"></div></div>
+        <div class="calc-row"><div class="eq">P = 5 × 0,0659 ≈ 0,330 W</div><div class="why" data-i18n="c3"></div></div>
+        <div class="calc-row"><div class="eq">I = 5 / 27,279 ≈ 0,183 A</div><div class="why" data-i18n="c4"></div></div>
+        <p class="note" data-i18n="concl"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Answers -->
+  <section class="bench" aria-labelledby="h-ans">
+    <h2 id="h-ans"><span class="tag" data-i18n="tag4"></span><span data-i18n="h4"></span></h2>
+    <div class="answers">
+      <article class="ans"><h3><span class="qid">G1</span><span data-i18n="aG1h"></span></h3><div data-i18n="aG1"></div></article>
+      <article class="ans"><h3><span class="qid">G2</span><span data-i18n="aG2h"></span></h3><div data-i18n="aG2"></div></article>
+      <article class="ans"><h3><span class="qid">G4</span><span data-i18n="aG4h"></span></h3><div data-i18n="aG4"></div></article>
+      <article class="ans"><h3><span class="qid">VG1</span><span data-i18n="aVG1h"></span></h3><div data-i18n="aVG1"></div></article>
+      <article class="ans"><h3><span class="qid">VG2.3</span><span data-i18n="aVG2h"></span></h3><div data-i18n="aVG2"></div></article>
+      <article class="ans tip"><h3 data-i18n="anaH"></h3><div data-i18n="ana"></div></article>
+    </div>
+  </section>
+
+  <footer data-i18n="footer"></footer>
+</div>
+
+<script>
+(() => {
+/* ---------- text ---------- */
+const TXT = {
+  sv: {
+    eyebrow: "Elektronik 20 YHP · ETI26D · Laboration 01 (G och VG)",
+    subtitle: "Lampkrets och Ohms lag",
+    intro: "Det här är min interaktiva visualisering av Lab 1. Den bygger på mina mätvärden från FreeCircuitSim och visar hur glödtrådens temperatur styr resistansen, och därmed strömmen, i en enkel lampkrets.",
+    chipLamp: "Lampa 6,5 V / 0,5 W",
+    tag1: "Experiment 1 · statiskt",
+    h1: "Utforska sambanden",
+    lede1: "Flytta reglagen och se hur spänning, glödtrådens temperatur, resistans, ström, effekt och ljusets färg hänger ihop. Här styr du temperaturen direkt.",
+    filTemp: "Glödtrådens temperatur", battV: "Batterispänning",
+    vHint: "Labben använder 5 V. Lampans märkspänning är 6,5 V.",
+    pCold: "Kall: 300 K", pWarm: "Efter frånslag: 457 K", pSteady: "Stabil drift: 2 013 K",
+    tip1: "<b>Prova:</b> håll spänningen på 5 V och öka temperaturen från 300 K till 2 013 K. Resistansen ökar och strömmen minskar. Lås sedan temperaturen och ändra spänningen i stället.",
+    kR: "Resistans", kI: "Ström", kP: "Effekt", kPe: "Elektrisk effekt", kWl: "Toppvåglängd", kBr: "Synligt ljusindex", kApp: "Utseende",
+    kT: "Temperatur", kStart: "Startström vid senaste tillslag",
+    rtTitle: "Resistans mot temperatur, mina mätpunkter",
+    lgPts: "Mätpunkt från FreeCircuitSim", lgNow: "Aktuellt läge",
+    note1: "Resistansen interpoleras linjärt mellan mina sex avläsningar (300, 334, 457, 476, 1 032 och 2 013 K) och extrapoleras över 2 013 K. Toppvåglängden räknas med Wiens förskjutningslag, λ = 2 898 µm·K / T. Ljusindexet är ett illustrativt relativt mått, inte en kalibrerad fotometrisk mätning. Spektrumets topp ligger kvar i det infraröda även när lampan glöder synligt.",
+    tag2: "Experiment 2 · tidsbaserat",
+    h2: "Slå av och på lampan och styr tiden",
+    lede2: "Slut brytaren och se startströmmen. Öppna den igen: strömmen faller direkt till noll medan glödtråden fortsätter att svalna. Slut den igen innan den hunnit kallna för att se en varmstart med lägre startström.",
+    closeSw: "Slut brytaren", openSw: "Öppna brytaren", pause: "Pausa", resume: "Fortsätt", reset: "Återställ", adv: "Stega 1 s",
+    speed: "Simuleringshastighet", srcV: "Källspänning",
+    status: "Status:", elapsed: "Simulerad tid:",
+    stOpen: "Brytare öppen", stClosed: "Brytare sluten", stPaused: "pausad", stRunning: "körs",
+    pauseNote: "Paus fryser hela beräkningen, även temperaturen. Att öppna brytaren gör strömmen noll, men glödtråden fortsätter att svalna så länge simuleringen körs. Återställ ger 300 K.",
+    lgI: "Ström (A, vänster skala)", lgT: "Temperatur (K, höger skala)",
+    note2: "Det tidsbaserade experimentet är en förenklad termisk modell som jag kalibrerat mot labbens stabila läge, 2 013 K och 65,9 mA vid 5 V. Tidsförloppet och ljusstyrkan är illustrativa och inte en exakt kopia av FreeCircuitSims interna modell.",
+    noStart: "ingen ännu", atT: "vid",
+    tag3: "Resultat", h3: "Mina mätvärden och beräkningar",
+    tblVG: "VG1 · avläsningar under uppvärmning (5 V)", tblG: "G2 · öppen och sluten brytare",
+    thT: "Temperatur", thR: "Resistans", thI: "Ström", thSw: "Brytare", thLamp: "Lampa",
+    calculated: "beräknat", gOpen: "Öppen, efter avsvalning", gOff: "Släckt", gClosed: "Sluten, stabilt värde", gOn: "Lyser",
+    calcH: "Beräkningar",
+    c1: "Teoretisk startström från kall glödtråd (300 K).",
+    c2: "Varm, stabil resistans enligt Ohms lag.",
+    c3: "Elektrisk effekt i stabilt läge, under märkeffekten 0,5 W eftersom 5 V är under märkspänningen 6,5 V.",
+    c4: "Varmstart: glödtråden var fortfarande 457 K (cirka 184 °C) efter frånslag.",
+    concl: "Slutsats: glödtrådens resistans är inte konstant. Strömmen upphör direkt när kretsen bryts, medan temperaturen förändras gradvis. Därför beror startströmmen på hur varm glödtråden är vid tillslaget.",
+    footer: "Pedagogisk modell baserad på mina egna observationer och beräkningar i FreeCircuitSim (Lab 1, Elektronik 20 YHP). Den är inte en exakt kopia av FreeCircuitSims interna beräkningsmodell.",
+    app: ["Ingen synlig glöd", "Mörkröd", "Röd", "Orange", "Gulorange", "Varmvit"],
+    flowE: "Elektronflöde (− → +)", flowC: "Konventionell ström (+ → −)",
+    capE: "Prickarna visar elektronerna. De är negativt laddade, stöts bort från minuspolen och dras mot pluspolen. Därför rör de sig från − genom lampan och amperemetern tillbaka till +.",
+    capE2: "Elektronerna förbrukas inte. Lika många elektroner lämnar lampan som går in i den, och strömmen är lika stor i varje punkt i kretsen. Det som omvandlas är energi: i glödtråden blir elektrisk energi till värme, och den heta glödtråden sänder ut värmestrålning. Det mesta är infraröd strålning och en liten del är synligt ljus. Varje elektron rör sig långsamt, men alla börjar röra sig samtidigt, därför tänds lampan direkt.",
+    tag4: "Analys", h4: "Mina svar",
+    aG1h: "Öppen brytare",
+    aG1: "<p>Amperemetern visar 0 mA och lampan är släckt. Källan ger fortfarande 5 V som en potentialskillnad mellan polerna, men den öppna brytaren bryter strömvägen. Utan en sluten krets kan ingen ström flyta.</p>",
+    aG2h: "Sluten brytare",
+    aG2: "<p>När brytaren sluts blir strömvägen hel. Ström flyter genom lampan, glödtråden värms upp och lampan börjar lysa. Strömmen stabiliseras på 65,9 mA.</p>",
+    aG4h: "Amperemetern, paus och frånslag",
+    aG4: "<p>Amperemetern är kopplad i serie och mäter hur mycket laddning som passerar per sekund (1 A = 1 C/s). I en seriekrets är strömmen lika stor i varje punkt, så det spelar ingen roll var i kretsen amperemetern sitter.</p><p>Paus fryser hela simuleringens tillstånd, även temperaturen. Om jag i stället öppnar brytaren faller strömmen direkt till 0 mA, medan glödtråden fortsätter att svalna.</p>",
+    aVG1h: "Förutsägelse och observation",
+    aVG1: "<p><b>Förutsägelse:</b> strömmen börjar högt och sjunker mot ett stabilt värde. En kall glödtråd har låg resistans, och enligt I = U / R med U fast på 5 V ger låg resistans hög ström.</p><p><b>Observation:</b> resultatet stämde med förutsägelsen.</p><p><b>Extra observation:</b> en varmstart vid cirka 457 K såg mörk ut, eftersom synlig glöd kräver ungefär 800 K, men gav ändå en lägre startström än en kallstart.</p>",
+    aVG2h: "Varm och kall resistans",
+    aVG2: "<p>Den varma resistansen (75,9 Ω) kan inte användas för en kall glödtråd. Kall glödtråd har 4,225 Ω, cirka 18 gånger lägre, vilket ger en startström på cirka 1,18 A.</p><p>Märkdata gäller vid 6,5 V: I = 0,5 / 6,5 ≈ 76,9 mA och R = 6,5² / 0,5 = 84,5 Ω. Vid 5 V blir glödtråden svalare, och jag mätte 65,9 mA, 75,9 Ω och 0,33 W.</p><p>Sambandet är inte linjärt. Dubbel spänning ger inte dubbel ström, eftersom resistansen ökar med temperaturen.</p>",
+    anaH: "En liknelse: pelarsalen",
+    ana: "<p>Tänk dig atomerna i glödtråden som pelare i en sal och elektronerna som människor som försöker ta sig igenom. När glödtråden är kall står pelarna stilla och det är lätt att passera. Värme får pelarna att svaja, så elektronerna krockar oftare med dem och flödet går långsammare. Det är den ökade resistansen.</p>",
+    whyH: "Varför ändras strömmen?",
+    whyR: "Glödtråden är av volfram. När den värms upp vibrerar metallatomerna i kristallgittret kraftigare, och de fria elektronerna kolliderar oftare med dem. Fler kollisioner ger högre resistans. Kall glödtråd har cirka 4,2 Ω och ger en hög startström. När den värms upp stiger resistansen och strömmen sjunker. Spänningen är hela tiden 5 V. Strömmen stabiliseras när den tillförda elektriska effekten är lika stor som effekten glödtråden förlorar genom strålning och värme, vid cirka 2 013 K och 65,9 mA.",
+    capC: "Prickarna visar den konventionella strömriktningen, från + genom lampan till −. Den bestämdes innan man visste att det är elektroner som rör sig. Den används fortfarande i kretsscheman och i formler som I = U / R. Strömmens storlek blir densamma åt båda hållen.",
+    lamp: "Glödlampa", hot: "Glödtråden behåller värmeenergi", cold: "Glödtråden är kall",
+  },
+  en: {
+    eyebrow: "Electronics 20 YHP · ETI26D · Lab 01 (G and VG)",
+    subtitle: "Lamp circuit and Ohm's law",
+    intro: "This is my interactive visualisation of Lab 1. It is built from my own FreeCircuitSim readings and shows how the filament temperature sets the resistance, and therefore the current, in a simple lamp circuit.",
+    chipLamp: "Lamp 6.5 V / 0.5 W",
+    tag1: "Experiment 1 · static",
+    h1: "Explore the relationships",
+    lede1: "Move either slider and watch how voltage, filament temperature, resistance, current, power and light colour relate. Here you control the temperature directly.",
+    filTemp: "Filament temperature", battV: "Battery voltage",
+    vHint: "The lab uses 5 V. The lamp is rated 6.5 V.",
+    pCold: "Cold: 300 K", pWarm: "After switch-off: 457 K", pSteady: "Steady: 2,013 K",
+    tip1: "<b>Try this:</b> keep the voltage at 5 V and raise the temperature from 300 K to 2,013 K. Resistance rises and current falls. Then fix the temperature and change the voltage instead.",
+    kR: "Resistance", kI: "Current", kP: "Power", kPe: "Electrical power", kWl: "Peak wavelength", kBr: "Visible brightness index", kApp: "Appearance",
+    kT: "Temperature", kStart: "Inrush current at last switch-on",
+    rtTitle: "Resistance vs temperature, my readings",
+    lgPts: "Reading from FreeCircuitSim", lgNow: "Current setting",
+    note1: "Resistance is interpolated linearly between my six readings (300, 334, 457, 476, 1,032 and 2,013 K) and extrapolated above 2,013 K. Peak wavelength uses Wien's law, λ = 2,898 µm·K / T. The brightness index is illustrative, not a calibrated photometric measurement. The spectrum's peak stays in the infrared even when the lamp glows visibly.",
+    tag2: "Experiment 2 · over time",
+    h2: "Switch the lamp on and off, and control time",
+    lede2: "Close the switch to see the inrush current. Open it again: current drops to zero at once while the filament keeps cooling. Close it before it has cooled to see a warm start with a lower inrush.",
+    closeSw: "Close switch", openSw: "Open switch", pause: "Pause", resume: "Resume", reset: "Reset", adv: "Advance 1 s",
+    speed: "Simulation speed", srcV: "Source voltage",
+    status: "Status:", elapsed: "Simulated time:",
+    stOpen: "Switch open", stClosed: "Switch closed", stPaused: "paused", stRunning: "running",
+    pauseNote: "Pausing freezes the whole calculation, temperature included. Opening the switch sets current to zero, but the filament keeps cooling while the simulation runs. Reset returns it to 300 K.",
+    lgI: "Current (A, left scale)", lgT: "Temperature (K, right scale)",
+    note2: "This time-based experiment is a simplified thermal model I calibrated to the lab's steady state of 2,013 K and 65.9 mA at 5 V. Its timing and brightness are illustrative, not an exact copy of FreeCircuitSim's internal model.",
+    noStart: "none yet", atT: "at",
+    tag3: "Results", h3: "My readings and calculations",
+    tblVG: "VG1 · readings while heating (5 V)", tblG: "G2 · open and closed switch",
+    thT: "Temperature", thR: "Resistance", thI: "Current", thSw: "Switch", thLamp: "Lamp",
+    calculated: "calculated", gOpen: "Open, after cooling", gOff: "Off", gClosed: "Closed, steady", gOn: "Lit",
+    calcH: "Calculations",
+    c1: "Theoretical inrush current from a cold filament (300 K).",
+    c2: "Hot, steady resistance from Ohm's law.",
+    c3: "Electrical power at steady state, below the rated 0.5 W because 5 V is below the rated 6.5 V.",
+    c4: "Warm start: the filament was still 457 K (about 184 °C) after switch-off.",
+    concl: "Conclusion: the filament's resistance is not constant. Current stops the moment the circuit opens, while temperature changes gradually. That is why the inrush current depends on how hot the filament is at switch-on.",
+    footer: "Educational model based on my own observations and calculations in FreeCircuitSim (Lab 1, Electronics 20 YHP). It is not an exact copy of FreeCircuitSim's internal model.",
+    app: ["No visible glow", "Dark red", "Red", "Orange", "Yellow-orange", "Warm white"],
+    flowE: "Electron flow (− → +)", flowC: "Conventional current (+ → −)",
+    capE: "The dots show the electrons. They carry negative charge, so they are pushed away from the negative terminal and pulled toward the positive one. They travel from − through the lamp and ammeter back to +.",
+    capE2: "The electrons are not used up. As many electrons leave the lamp as enter it, and the current is the same at every point in the circuit. What changes form is energy: in the filament, electrical energy becomes heat, and the hot filament gives off thermal radiation. Most of it is infrared and only a small part is visible light. Each electron drifts slowly, but they all start moving at once, which is why the lamp lights immediately.",
+    tag4: "Analysis", h4: "My answers",
+    aG1h: "Open switch",
+    aG1: "<p>The ammeter reads 0 mA and the lamp is off. The source still provides 5 V as a potential difference between its terminals, but the open switch breaks the current path. Without a closed circuit, no current can flow.</p>",
+    aG2h: "Closed switch",
+    aG2: "<p>Closing the switch completes the current path. Current flows through the lamp, the filament heats up and the lamp lights. The current settles at 65.9 mA.</p>",
+    aG4h: "The ammeter, pause and switch-off",
+    aG4: "<p>The ammeter is connected in series and measures how much charge passes per second (1 A = 1 C/s). The current is the same at every point in a series circuit, so it makes no difference where the ammeter is placed.</p><p>Pause freezes the whole simulation state, temperature included. If I open the switch instead, the current drops to 0 mA at once while the filament keeps cooling.</p>",
+    aVG1h: "Prediction and observation",
+    aVG1: "<p><b>Prediction:</b> the current starts high and falls to a stable value. A cold filament has low resistance, and with I = U / R and U fixed at 5 V, low resistance gives high current.</p><p><b>Observation:</b> the result matched the prediction.</p><p><b>Extra observation:</b> a warm restart at about 457 K looked dark, since visible glow needs roughly 800 K, but it still gave a lower inrush current than a cold start.</p>",
+    aVG2h: "Hot and cold resistance",
+    aVG2: "<p>The hot resistance (75.9 Ω) cannot be used for a cold filament. A cold filament is 4.225 Ω, about 18 times lower, which gives an inrush current of about 1.18 A.</p><p>The rated data applies at 6.5 V: I = 0.5 / 6.5 ≈ 76.9 mA and R = 6.5² / 0.5 = 84.5 Ω. At 5 V the filament runs cooler, and I measured 65.9 mA, 75.9 Ω and 0.33 W.</p><p>The relationship is not linear. Doubling the voltage does not double the current, because resistance rises with temperature.</p>",
+    anaH: "An analogy: the hall of pillars",
+    ana: "<p>Picture the atoms in the filament as pillars in a hall, and the electrons as people trying to get through. When the filament is cold the pillars stand still and it is easy to pass. Heat makes the pillars sway, so the electrons collide with them more often and the flow slows down. That is the higher resistance.</p>",
+    whyH: "Why does the current change?",
+    whyR: "The filament is tungsten. As it heats up, the metal atoms in its crystal lattice vibrate harder, and the free electrons collide with them more often. More collisions mean higher resistance. A cold filament is about 4.2 Ω and draws a high inrush current. As it heats, resistance rises and current falls. The voltage stays at 5 V throughout. The current settles when the electrical power going in equals the power the filament loses as radiation and heat, at about 2,013 K and 65.9 mA.",
+    capC: "The dots show conventional current, from + through the lamp to −. The convention was set before anyone knew electrons were the moving charge. Circuit diagrams and formulas like I = U / R still use it. The size of the current is the same in both directions.",
+    lamp: "Incandescent lamp", hot: "Hot filament retains thermal energy", cold: "Filament is cold",
+  }
+};
+let lang = "sv", flowMode = "electron";
+try { const s = localStorage.getItem("lab1-lang"); if (s === "en" || s === "sv") lang = s; } catch (e) {}
+const t = k => TXT[lang][k];
+const fmt = (n, d) => n.toLocaleString(lang === "sv" ? "sv-SE" : "en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+/* ---------- physics from my readings ---------- */
+const PTS = [[300, 4.225], [334, 10.618], [457, 27.279], [476, 29.013], [1032, 57.677], [2013, 75.873]];
+function R(T) {
+  if (T <= PTS[0][0]) return PTS[0][1];
+  for (let i = 1; i < PTS.length; i++) {
+    if (T <= PTS[i][0]) { const [a, ra] = PTS[i - 1], [b, rb] = PTS[i]; return ra + (rb - ra) * (T - a) / (b - a); }
+  }
+  const [a, ra] = PTS[PTS.length - 2], [b, rb] = PTS[PTS.length - 1];
+  return rb + (rb - ra) / (b - a) * (T - b);
+}
+const wien = T => 2898 / T;
+const bright = T => T < 800 ? 0 : Math.min(1, ((T - 800) / (2013 - 800)) ** 2);
+function appearance(T) { const a = t("app"); return T < 800 ? a[0] : T < 1000 ? a[1] : T < 1300 ? a[2] : T < 1600 ? a[3] : T < 1900 ? a[4] : a[5]; }
+function kelvinRGB(T) {
+  const k = Math.max(1000, T) / 100; let r, g, b;
+  r = k <= 66 ? 255 : 329.7 * (k - 60) ** -0.1332;
+  g = k <= 66 ? 99.47 * Math.log(k) - 161.12 : 288.12 * (k - 60) ** -0.0755;
+  b = k >= 66 ? 255 : k <= 19 ? 0 : 138.52 * Math.log(k - 10) - 305.04;
+  const c = v => Math.max(0, Math.min(255, Math.round(v)));
+  return [c(r), c(g), c(b)];
+}
+const mix = (a, b, f) => a.map((v, i) => Math.round(v + (b[i] - v) * f));
+const rgb = a => `rgb(${a[0]},${a[1]},${a[2]})`;
+
+/* thermal model calibrated so 5 V settles at 2013 K / 65.9 mA */
+const C = 3e-4, TA = 300, PSS = 5 * 0.0659, K1 = 0.4 * PSS / (2013 - TA), K2 = 0.6 * PSS / (2013 ** 4 - TA ** 4);
+
+/* ---------- circuit drawing ---------- */
+const NS = "http://www.w3.org/2000/svg";
+function makeCircuit(host, withSwitch) {
+  host.innerHTML = `
+  <svg viewBox="0 0 440 270" role="img" aria-label="circuit">
+    <defs><radialGradient id="${host.id}-g"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+    <path class="wire" d="M70 60 H370 V210 H70 Z" fill="none" stroke="var(--wire)" stroke-width="2.5" opacity="0.55"/>
+    <path class="flow" d="M70 60 H370 V210 H70 Z" fill="none" stroke="var(--wire)" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 17"/>
+    <!-- battery -->
+    <rect x="196" y="44" width="34" height="32" fill="var(--panel)"/>
+    <line x1="203" y1="42" x2="203" y2="78" stroke="var(--panel-ink)" stroke-width="3"/>
+    <line x1="221" y1="50" x2="221" y2="70" stroke="var(--panel-ink)" stroke-width="5"/>
+    <text x="194" y="38" fill="var(--panel-muted)" font-size="13" font-family="IBM Plex Mono, monospace">+</text>
+    <text x="225" y="38" fill="var(--panel-muted)" font-size="13" font-family="IBM Plex Mono, monospace">−</text>
+    <text class="arr" x="378" y="140" fill="var(--wire)" font-size="13" font-family="IBM Plex Mono, monospace">e⁻ ↓</text>
+    <text class="vlab" x="212" y="24" text-anchor="middle" fill="var(--panel-ink)" font-size="14" font-family="IBM Plex Mono, monospace"></text>
+    ${withSwitch ? `
+    <rect x="286" y="48" width="48" height="24" fill="var(--panel)"/>
+    <circle cx="292" cy="60" r="4" fill="var(--panel-ink)"/>
+    <circle cx="328" cy="60" r="4" fill="var(--panel-ink)"/>
+    <line class="lever" x1="292" y1="60" x2="326" y2="60" stroke="var(--panel-ink)" stroke-width="3" stroke-linecap="round" style="transform-origin:292px 60px;transition:transform .2s"/>` : ``}
+    <!-- ammeter -->
+    <circle cx="70" cy="135" r="19" fill="var(--panel)" stroke="var(--panel-ink)" stroke-width="2"/>
+    <text x="70" y="141" text-anchor="middle" fill="var(--panel-ink)" font-size="16" font-weight="600" font-family="Space Grotesk, sans-serif">A</text>
+    <text class="ilab" x="98" y="139" fill="var(--wire)" font-size="14" font-family="IBM Plex Mono, monospace"></text>
+    <!-- lamp -->
+    <circle class="halo" cx="220" cy="210" r="70" fill="url(#${host.id}-g)" opacity="0"/>
+    <circle class="bulb" cx="220" cy="210" r="27" fill="#2f3c46" stroke="var(--panel-ink)" stroke-width="2"/>
+    <path class="fil" d="M206 222 L206 198 L213 214 L220 198 L227 214 L234 198 L234 222" fill="none" stroke="#7c8b96" stroke-width="2.5" stroke-linejoin="round"/>
+    <text class="llab" x="220" y="258" text-anchor="middle" fill="var(--panel-muted)" font-size="12" font-family="IBM Plex Sans, sans-serif"></text>
+  </svg>
+  <div class="flowtog" role="group">
+    <button type="button" class="ft" data-mode="electron"></button>
+    <button type="button" class="ft" data-mode="conv"></button>
+  </div>
+  <p class="flowcap"></p>`;
+  host.querySelectorAll(".ft").forEach(b => b.addEventListener("click", () => { flowMode = b.dataset.mode; paintFlowLabels(); }));
+  const q = s => host.querySelector(s);
+  return { flow: q(".flow"), vlab: q(".vlab"), ilab: q(".ilab"), halo: q(".halo"), halostop: host.querySelectorAll("stop"), bulb: q(".bulb"), fil: q(".fil"), llab: q(".llab"), lever: q(".lever"), off: 0 };
+}
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function paintFlowLabels() {
+  const e = flowMode === "electron";
+  document.querySelectorAll(".panel").forEach(p => {
+    const arr = p.querySelector(".arr"); if (!arr) return;
+    arr.textContent = e ? "e⁻ ↓" : "I ↑";
+    p.querySelectorAll(".ft").forEach(b => { b.textContent = t(b.dataset.mode === "electron" ? "flowE" : "flowC"); b.setAttribute("aria-pressed", b.dataset.mode === flowMode); });
+    p.querySelector(".flowcap").textContent = t(e ? "capE" : "capC");
+  });
+  document.querySelectorAll(".flowmore").forEach(n => { n.hidden = !e; });
+}
+function paintCircuit(c, V, I, T, label, open) {
+  c.vlab.textContent = fmt(V, 1) + " V";
+  c.ilab.textContent = fmt(I * 1000, 1) + " mA";
+  const br = bright(T), col = kelvinRGB(T);
+  const heat = Math.max(0, Math.min(1, (T - 550) / 1300));
+  c.fil.setAttribute("stroke", rgb(mix([124, 139, 150], mix(col, [255, 245, 225], br * 0.5), heat)));
+  c.bulb.setAttribute("fill", rgb(mix([47, 60, 70], col, Math.sqrt(br) * 0.9)));
+  c.halostop.forEach(s => s.setAttribute("stop-color", rgb(col)));
+  c.halo.setAttribute("opacity", (br * 0.85).toFixed(3));
+  c.llab.textContent = label;
+  c.flow.style.opacity = I > 0.0005 ? 1 : 0;
+  if (c.lever) c.lever.style.transform = open ? "rotate(-28deg)" : "rotate(0deg)";
+}
+function flowStep(c, I, dt) {
+  if (reduceMotion) return;
+  c.off += (flowMode === "electron" ? -1 : 1) * dt * 38 * Math.sqrt(Math.max(0, I) / 0.0659);
+  c.flow.setAttribute("stroke-dashoffset", (c.off % 18).toFixed(2));
+}
+
+/* ---------- canvas helpers ---------- */
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function prep(cv) {
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute("height");
+  const dpr = window.devicePixelRatio || 1, w = Math.max(1, cv.clientWidth), h = +cv.dataset.h;
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; cv.style.height = h + "px"; }
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return [g, w, h];
+}
+
+/* ---------- experiment 1 ---------- */
+const el = id => document.getElementById(id);
+const c1 = makeCircuit(el("circ1"), false);
+let I1 = 0;
+function update1() {
+  const T = +el("t1").value, V = +el("v1").value, r = R(T), I = V / r, P = V * I;
+  I1 = I;
+  el("t1-out").textContent = fmt(T, 0) + " K";
+  el("t1-c").textContent = fmt(T - 273.15, 2) + " °C";
+  el("v1-out").textContent = fmt(V, 1) + " V";
+  el("r1").textContent = fmt(r, 3) + " Ω";
+  el("i1").textContent = fmt(I * 1000, 1) + " mA";
+  el("p1").textContent = fmt(P, 3) + " W";
+  el("w1").textContent = fmt(wien(T), 2) + " µm";
+  el("b1").textContent = Math.round(bright(T) * 100) + " %";
+  el("a1").textContent = appearance(T);
+  el("f1").textContent = `R(T) ≈ ${fmt(r, 3)} Ω   I = U / R = ${fmt(V, 1)} / ${fmt(r, 3)} = ${fmt(I, 4)} A   P = U × I = ${fmt(P, 4)} W`;
+  paintCircuit(c1, V, I, T, t("lamp"), false);
+  drawRT(T);
+}
+function drawRT(Tnow) {
+  const cv = el("rt"), [g, w, h] = prep(cv);
+  const L = 46, Rr = 14, Tp = 12, B = 30, pw = w - L - Rr, ph = h - Tp - B;
+  const x = T => L + T / 2500 * pw, y = r => Tp + ph - r / 90 * ph;
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"), acc = css("--accent"), heat = css("--heat");
+  g.font = "11px IBM Plex Mono, monospace"; g.fillStyle = muted; g.strokeStyle = line; g.lineWidth = 1;
+  for (let r = 0; r <= 80; r += 20) { g.beginPath(); g.moveTo(L, y(r)); g.lineTo(L + pw, y(r)); g.stroke(); g.textAlign = "right"; g.fillText(r + " Ω", L - 6, y(r) + 4); }
+  g.textAlign = "center";
+  for (let T = 0; T <= 2500; T += 500) g.fillText(fmt(T, 0) + " K", x(T), h - 10);
+  // curve
+  g.strokeStyle = ink; g.globalAlpha = 0.55; g.lineWidth = 1.5; g.beginPath();
+  PTS.forEach(([T, r], i) => i ? g.lineTo(x(T), y(r)) : g.moveTo(x(T), y(r))); g.stroke();
+  g.setLineDash([4, 4]); g.beginPath(); g.moveTo(x(2013), y(R(2013))); g.lineTo(x(2500), y(R(2500))); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+  // readings
+  g.fillStyle = acc; PTS.forEach(([T, r]) => { g.beginPath(); g.arc(x(T), y(r), 4, 0, 7); g.fill(); });
+  // now
+  const rn = R(Tnow);
+  g.strokeStyle = heat; g.lineWidth = 1; g.setLineDash([2, 3]);
+  g.beginPath(); g.moveTo(x(Tnow), y(0)); g.lineTo(x(Tnow), y(rn)); g.lineTo(L, y(rn)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = heat; g.beginPath(); g.arc(x(Tnow), y(rn), 6, 0, 7); g.fill();
+  g.fillStyle = ink; g.textAlign = x(Tnow) > w - 120 ? "right" : "left"; g.font = "12px IBM Plex Mono, monospace";
+  g.fillText(`${fmt(rn, 2)} Ω`, x(Tnow) + (g.textAlign === "right" ? -10 : 10), y(rn) - 8);
+}
+["t1", "v1"].forEach(id => el(id).addEventListener("input", update1));
+document.querySelectorAll("[data-preset]").forEach(b => b.addEventListener("click", () => { el("t1").value = b.dataset.preset; el("v1").value = 5; update1(); }));
+
+/* ---------- experiment 2 ---------- */
+const c2 = makeCircuit(el("circ2"), true);
+const S = { T: TA, t: 0, closed: false, running: true, hist: [], lastStart: null, lastStartT: null, nextSample: 0 };
+const V2 = () => +el("v2").value;
+const curI = () => S.closed ? V2() / R(S.T) : 0;
+function simulate(dtTotal) {
+  let left = dtTotal;
+  while (left > 0) {
+    const h = Math.min(left, 0.0004);
+    const I = curI(), P = V2() * I;
+    S.T += (P - K1 * (S.T - TA) - K2 * (S.T ** 4 - TA ** 4)) / C * h;
+    if (S.T < TA) S.T = TA;
+    S.t += h; left -= h;
+    if (S.t >= S.nextSample) { S.hist.push([S.t, curI(), S.T]); S.nextSample = S.t + 0.004; }
+  }
+  while (S.hist.length && S.hist[0][0] < S.t - 5.2) S.hist.shift();
+}
+function update2() {
+  const I = curI(), r = R(S.T);
+  el("sw").textContent = S.closed ? t("openSw") : t("closeSw");
+  el("run").textContent = S.running ? t("pause") : t("resume");
+  el("st").textContent = (S.closed ? t("stClosed") : t("stOpen")) + " · " + (S.running ? t("stRunning") : t("stPaused"));
+  el("st-dot").classList.toggle("on", S.closed);
+  el("el").textContent = fmt(S.t, 2) + " s";
+  el("spd-out").textContent = fmt(+el("spd").value, 2) + "×";
+  el("v2-out").textContent = fmt(V2(), 1) + " V";
+  el("t2").textContent = fmt(S.T, 0) + " K";
+  el("t2c").textContent = fmt(S.T - 273.15, 0) + " °C";
+  el("r2").textContent = fmt(r, 3) + " Ω";
+  el("i2").textContent = fmt(I * 1000, 1) + " mA";
+  el("p2").textContent = fmt(V2() * I, 3) + " W";
+  if (S.lastStart == null) { el("s2").textContent = "–"; el("s2c").textContent = t("noStart"); }
+  else { el("s2").textContent = fmt(S.lastStart * 1000, 1) + " mA"; el("s2c").textContent = `${t("atT")} ${fmt(S.lastStartT, 0)} K`; }
+  el("b2").textContent = Math.round(bright(S.T) * 100) + " %";
+  el("b2c").textContent = appearance(S.T);
+  paintCircuit(c2, V2(), I, S.T, S.closed || S.T > TA + 5 ? t("hot") : t("cold"), !S.closed);
+  if (!S.closed && S.T <= TA + 5) c2.llab.textContent = t("cold");
+  if (S.closed) c2.llab.textContent = t("lamp");
+  drawSim();
+}
+function drawSim() {
+  const cv = el("sim"), [g, w, h] = prep(cv);
+  const L = 44, Rr = 50, Tp = 12, B = 34, pw = w - L - Rr, ph = h - Tp - B;
+  const x0 = Math.max(0, S.t - 5), x = s => L + (s - x0) / 5 * pw;
+  const yI = i => Tp + ph - Math.min(i, 1.6) / 1.6 * ph, yT = T => Tp + ph - Math.min(T, 2800) / 2800 * ph;
+  const pink = css("--panel-ink"), pmut = css("--panel-muted"), pline = css("--panel-line"), wire = css("--wire"), heat = css("--heat");
+  g.font = "11px IBM Plex Mono, monospace"; g.lineWidth = 1;
+  for (let k = 0; k <= 4; k++) {
+    const yy = Tp + ph - k / 4 * ph;
+    g.strokeStyle = pline; g.beginPath(); g.moveTo(L, yy); g.lineTo(L + pw, yy); g.stroke();
+    g.fillStyle = pmut; g.textAlign = "right"; g.fillText(fmt(k * 0.4, 1), L - 6, yy + 4);
+    g.textAlign = "left"; g.fillText(fmt(k * 700, 0), L + pw + 6, yy + 4);
+  }
+  g.textAlign = "center";
+  for (let s = Math.ceil(x0); s <= x0 + 5 + 1e-9; s++) g.fillText(fmt(s, 0), x(s), Tp + ph + 16);
+  g.fillStyle = pink; g.fillText(lang === "sv" ? "Simulerad tid (s)" : "Simulated time (s)", L + pw / 2, h - 4);
+  const pts = S.hist.filter(p => p[0] >= x0);
+  const line = (sel, col, yf) => {
+    if (pts.length < 2) return;
+    g.strokeStyle = col; g.lineWidth = 2; g.lineJoin = "round"; g.beginPath();
+    pts.forEach((p, i) => i ? g.lineTo(x(p[0]), yf(p[sel])) : g.moveTo(x(p[0]), yf(p[sel]))); g.stroke();
+    const last = pts[pts.length - 1]; g.fillStyle = col; g.beginPath(); g.arc(x(last[0]), yf(last[sel]), 3.5, 0, 7); g.fill();
+  };
+  line(2, heat, yT); line(1, wire, yI);
+}
+el("sw").addEventListener("click", () => {
+  S.closed = !S.closed;
+  if (S.closed) { S.lastStart = V2() / R(S.T); S.lastStartT = S.T; }
+  S.hist.push([S.t, curI(), S.T]);
+  update2();
+});
+el("run").addEventListener("click", () => { S.running = !S.running; update2(); });
+el("reset").addEventListener("click", () => { Object.assign(S, { T: TA, t: 0, closed: false, hist: [], lastStart: null, lastStartT: null, nextSample: 0 }); update2(); });
+el("adv").addEventListener("click", () => { simulate(1); update2(); });
+["spd", "v2"].forEach(id => el(id).addEventListener("input", update2));
+
+/* ---------- loop ---------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (S.running) simulate(dt * +el("spd").value);
+  update2();
+  flowStep(c1, I1, dt);
+  if (S.running) flowStep(c2, curI(), dt * Math.max(0.25, +el("spd").value));
+  requestAnimationFrame(frame);
+}
+
+/* ---------- language & theme ---------- */
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(n => { n.innerHTML = t(n.dataset.i18n); });
+  el("lang-sv").setAttribute("aria-pressed", lang === "sv");
+  el("lang-en").setAttribute("aria-pressed", lang === "en");
+  paintFlowLabels(); update1(); update2();
+}
+["sv", "en"].forEach(l => el("lang-" + l).addEventListener("click", () => { lang = l; try { localStorage.setItem("lab1-lang", l); } catch (e) {} applyLang(); }));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", update1);
+new MutationObserver(update1).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+window.addEventListener("resize", update1);
+
+/* open in a working state: switch closed, a moment into warm-up */
+S.closed = true; S.lastStart = V2() / R(S.T); S.lastStartT = S.T; S.hist.push([0, S.lastStart, S.T]);
+simulate(1.2);
+applyLang();
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
